@@ -16,7 +16,7 @@ class Netatmo:
     def set_timeseries_db(self, ts_db):
         self.ts_db = ts_db
 
-    def get_last_timestamp(self, ts_name):
+    def get_start_timestamp(self, ts_name):
         try:
             start = self.ts_db.GetLastTimeStamp(ts_name).value / 10 ** 9 + 1
         except:
@@ -29,7 +29,7 @@ class Netatmo:
             ts_name_s = ts_name_s.replace(' ', '_')
             for module in station['modules']:
                 print ts_name_s + '.' + module['module_name']
-            start = self.get_last_timestamp(ts_name_s)
+            start = self.get_start_timestamp(ts_name_s)
             mtype = ','.join(station['data_type'])
             resp = self.devList.getMeasure(device_id=station_id, module_id=None, scale="max",
                                            mtype=mtype, date_begin=start, date_end=time.time())
@@ -40,7 +40,7 @@ class Netatmo:
             for module in station['modules']:
                 ts_name_m = ts_name_s + '.' + module['module_name']
                 ts_name_m = ts_name_m.replace(' ', '_')
-                start = self.get_last_timestamp(ts_name_m)
+                start = self.get_start_timestamp(ts_name_m)
                 mtype = ','.join(module['data_type'])
                 resp = self.devList.getMeasure(device_id=station_id, module_id=module['_id'], scale="max",
                                                mtype=mtype, date_begin=start, date_end=time.time())
@@ -75,8 +75,8 @@ class Netatmo:
 if __name__ == '__main__':
     netatmo = Netatmo(clientId='592d4e574deddb17828b5207',
                       clientSecret='kiJelIlaYDXVPOBU8Vi1qPPBP2dRGNCupxXvKR1VRj7',
-                      user='hagel@byg.dtu.dk',
-                      password='DTUbyg402',
+                      user='dummy',
+                      password='dummy',
                       verbose=True)
 
     ts_db = InfluxTSDB(dbhost='localhost',

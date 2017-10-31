@@ -17,6 +17,7 @@ app = dash.Dash('Smart Meter Dashboard', server=server, url_base_pathname='/', c
 
 
 app.layout = html.Div([
+
     html.Div([
         html.H1('IoTDashboard Dashboard')
               ],
@@ -47,7 +48,6 @@ app.layout = html.Div([
             id='icmeter-interval-component',
             interval=60*1000 # in milliseconds
         )],
-
         className="row")
 
 ], className="container")

@@ -11,6 +11,15 @@ class InfluxTSDB:
             self.influxdb = DataFrameClient(dbhost, dbport, dbuser, dbpassword, dbname)
             self.dbname = dbname
 
+
+    def DropDatabase(self):
+        try:
+            self.influxdb.drop_database(self.dbname)
+        except InfluxDBClientError, e:
+            if str(e) == "database does not exist!":
+                return True
+        return False
+
     def CheckDatabase(self):
         try:
             self.influxdb.create_database(self.dbname)
@@ -31,7 +40,6 @@ class InfluxTSDB:
 
     def GetLastTimeStamp(self, series_name, prop='*'):
         q = 'select %s from \"%s\" order by time desc limit 1;' % (prop, series_name)
-        print q
         result = self.influxdb.query(q)
         return result[series_name].index[0]
 
