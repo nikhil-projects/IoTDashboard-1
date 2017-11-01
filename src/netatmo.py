@@ -12,6 +12,7 @@ from datetime import datetime
 class Netatmo:
     def __init__(self, clientId, clientSecret, user, password, verbose=True):
         self.devList = WeatherStationData(lnetatmo.ClientAuth(clientId, clientSecret, user, password))
+        self.ts_name = 'netatmo.{}{}'
 
     def set_timeseries_db(self, ts_db):
         self.ts_db = ts_db
@@ -25,28 +26,25 @@ class Netatmo:
 
     def import_missing(self):
         for station_id, station in self.devList.stations.items():
-            ts_name_s = 'netatmo.' + station['station_name']
-            ts_name_s = ts_name_s.replace(' ', '_')
-            for module in station['modules']:
-                print ts_name_s + '.' + module['module_name']
-            start = self.get_start_timestamp(ts_name_s)
+            station_name = station['station_name'].replace(' ', '_')
+            ts = self.ts_name.format(station_name,'')
+            start = self.get_start_timestamp(ts)
             mtype = ','.join(station['data_type'])
             resp = self.devList.getMeasure(device_id=station_id, module_id=None, scale="max",
                                            mtype=mtype, date_begin=start, date_end=time.time())
-
             df = self.convert_to_df(resp, station['data_type'])
-            self.ts_db.WriteDB(ts_name_s, df)
+            self.ts_db.WriteDB(ts, df)
 
             for module in station['modules']:
-                ts_name_m = ts_name_s + '.' + module['module_name']
-                ts_name_m = ts_name_m.replace(' ', '_')
-                start = self.get_start_timestamp(ts_name_m)
+                module_name = module['module_name'].replace(' ', '_')
+                ts = self.ts_name.format(station_name, '.'+module_name)
+                start = self.get_start_timestamp(ts)
                 mtype = ','.join(module['data_type'])
                 resp = self.devList.getMeasure(device_id=station_id, module_id=module['_id'], scale="max",
                                                mtype=mtype, date_begin=start, date_end=time.time())
-
                 df = self.convert_to_df(resp, module['data_type'])
-                self.ts_db.WriteDB(ts_name_m, df)
+                if not df.empty:
+                    self.ts_db.WriteDB(ts, df)
 
     def convert_to_df(self, json, cols):
         numberOfRows = len(json['body'])
@@ -75,8 +73,8 @@ class Netatmo:
 if __name__ == '__main__':
     netatmo = Netatmo(clientId='592d4e574deddb17828b5207',
                       clientSecret='kiJelIlaYDXVPOBU8Vi1qPPBP2dRGNCupxXvKR1VRj7',
-                      user='dummy',
-                      password='dummy',
+                      user='hagel@byg.dtu.dk',
+                      password='DTUbyg402',
                       verbose=True)
 
     ts_db = InfluxTSDB(dbhost='localhost',
@@ -89,7 +87,9 @@ if __name__ == '__main__':
 
     sched = BlockingScheduler()
 
+    netatmo.import_missing()
 
+'''
     @sched.scheduled_job('interval', seconds=60)
     def poll_data():
         print('type=info msg="polling netatmo-meter" time="%s"' % datetime.now())
@@ -97,3 +97,4 @@ if __name__ == '__main__':
 
     # Start the schedule
     sched.start()
+'''

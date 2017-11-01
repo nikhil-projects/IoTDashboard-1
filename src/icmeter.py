@@ -110,9 +110,8 @@ class IcMeter:
                 print('Retrying...')
                 data = self.get_data_period(box_id, f, period)
 
-            if type(data) == pd.core.frame.DataFrame:
+            if (type(data) == pd.core.frame.DataFrame) and (not data.empty):
                 count += data.shape[0]
-                print(data)
                 self.ts_db.WriteDB(self.ts_name.format(box_id), data)
 
         completed = (100 * (f - start)) / (stop - start)
@@ -133,6 +132,7 @@ class IcMeter:
         timestamp = int(round(time.time() * 1000))
         data_url = "https://app.ic-meter.com/icm/api/measurements/days/%s?access_token=%s&fromDate=%s&toDate=%s&forecast=false&_=%i" % (
             box_id, self.access_token, fromdate, todate, timestamp)
+        #print data_url
 
         r = requests.get(data_url, timeout=self.timeout)
 
