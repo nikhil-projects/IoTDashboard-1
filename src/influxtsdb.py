@@ -12,7 +12,7 @@ class InfluxTSDB:
             self.dbname = dbname
 
 
-    def DropDatabase(self):
+    def drop_db(self):
         try:
             self.influxdb.drop_database(self.dbname)
         except InfluxDBClientError, e:
@@ -20,7 +20,7 @@ class InfluxTSDB:
                 return True
         return False
 
-    def CheckDatabase(self):
+    def ensure_db(self):
         try:
             self.influxdb.create_database(self.dbname)
         except InfluxDBClientError, e:
@@ -28,22 +28,22 @@ class InfluxTSDB:
                 return True
         return False
 
-    def CheckSeries(self, series_name, prop='*'):
+    def check_ts(self, series_name, prop='*'):
         q = 'select %s from \"%s\" limit 1;' % (prop, series_name)
         result = self.influxdb.query(q)
         return result[series_name].index[0]
 
-    def GetSeries(self, series_name, prop='*'):
+    def get_ts(self, series_name, prop='*'):
         q = 'select %s from \"%s\" order by time asc;' % (prop, series_name)
         result = self.influxdb.query(q)
         return result[series_name]
 
-    def GetLastTimeStamp(self, series_name, prop='*'):
+    def get_last_timestamp(self, series_name, prop='*'):
         q = 'select %s from \"%s\" order by time desc limit 1;' % (prop, series_name)
         result = self.influxdb.query(q)
         return result[series_name].index[0]
 
-    def WriteDB(self, series_name, df):
+    def write_ts(self, series_name, df):
         try:
             return self.influxdb.write_points(df, series_name)
         except InfluxDBClientError, e:

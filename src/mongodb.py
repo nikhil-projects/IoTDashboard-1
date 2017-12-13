@@ -121,18 +121,19 @@ class MongoConnection():
 
 
 if __name__ == '__main__':
-    metadata_db = MongoConnection(host="localhost",
+    metadata_db = MongoConnection(host="193.200.45.37",
                             port=27017,
                             db_name='scadb',
-                            username='sca',
+                            username='admin',
                             password='Abcd1234')
 
-    #scadb.drop_table('ic_meters')
-    #scadb.create_table('ic_meters', index='boxid', unique=True)
-    #scadb.insert_one('ic_meters', {'boxid':1001, 'name':'box1'})
-    metadata_db.create_table('ic_meters', index='boxid', unique=True)
+    #metadata_db.drop_table('ic_meters')
+
+
+    #metadata_db.create_table('ic_meters', index='boxid', unique=True)
+    #metadata_db.insert_one('ic_meters', {'boxid': 1001, 'name': 'box1'})
 
     #metadata_db.delete('ic_meters', conditions={'name':'box2'})
-    print metadata_db.get_one('ic_meters', conditions={'boxid':'5846'})
+    #print metadata_db.get_one('ic_meters', conditions={'boxid':1001})
     #print metadata_db.get_all('ic_meters')
 

@@ -19,7 +19,7 @@ class Northq:
 
     def get_last_timestamp(self, ts_name):
         try:
-            start = self.ts_db.GetLastTimeStamp(ts_name).value / 10 ** 9 + 1
+            start = self.ts_db.get_last_timestamp(ts_name).value / 10 ** 9 + 1
         except:
             start = int(time.time() - 3600 * 24 * 100)
         return start
@@ -35,7 +35,7 @@ class Northq:
 
             df = self.convert_to_df(resp, station['data_type'])
             print df
-            self.ts_db.WriteDB(ts_name_s, df)
+            self.ts_db.write_ts(ts_name_s, df)
 
             for module in station['modules']:
                 ts_name_m = ts_name_s + '.' + module['module_name']
@@ -47,7 +47,7 @@ class Northq:
 
                 df = self.convert_to_df(resp, module['data_type'])
                 print df
-                self.ts_db.WriteDB(ts_name_m, df)
+                self.ts_db.write_ts(ts_name_m, df)
 
     def convert_to_df(self, json, cols):
         numberOfRows = len(json['body'])
@@ -84,7 +84,7 @@ if __name__ == '__main__':
                          dbuser='root',
                          dbpassword='root',
                          dbname='testdb')
-    ts_db.CheckDatabase()
+    ts_db.ensure_db()
     netatmo.set_timeseries_db(ts_db)
 
     sched = BlockingScheduler()

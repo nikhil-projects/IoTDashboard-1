@@ -35,7 +35,7 @@ class IcMeter:
 
     def get_start_timestamp(self, ts_name):
         try:
-            start = self.ts_db.GetLastTimeStamp(ts_name).value / 10 ** 9 + 1
+            start = self.ts_db.get_last_timestamp(ts_name).value / 10 ** 9 + 1
         except:
             start = None
         return start
@@ -64,7 +64,8 @@ class IcMeter:
 
     def save_boxes(self, boxes):
         for box in boxes:
-            self.metadata_db.update_upsert('ic_meters', {'boxid':box['boxId']}, box)
+            print(box)
+            #self.metadata_db.update_upsert('ic_meters', {'boxid':box['boxId']}, box)
 
     def import_missing(self):
         self.get_access_token()
@@ -112,7 +113,7 @@ class IcMeter:
 
             if (type(data) == pd.core.frame.DataFrame) and (not data.empty):
                 count += data.shape[0]
-                self.ts_db.WriteDB(self.ts_name.format(box_id), data)
+                self.ts_db.write_ts(self.ts_name.format(box_id), data)
 
         completed = (100 * (f - start)) / (stop - start)
         if self.verbose:
@@ -177,14 +178,27 @@ class IcMeter:
 
 
 if __name__ == '__main__':
+    '''
     icmeter = IcMeter(user='dummy',
                       password='dummy',
                       verbose=True)
+    
+    icmeter = IcMeter(user='hagel@byg.dtu.dk',
+                      password='DTUbyg402',
+                      verbose=True)
+    '''
 
+    icmeter = IcMeter(user='scaicmeter@compute.dtu.dk',
+                      password='savetheclimate!now',
+                      verbose=True)
+    icmeter.get_access_token()
+    icmeter.get_boxes()
+
+    '''
     metadata_db = MongoConnection(host="localhost",
                             port=27017,
                             db_name='scadb',
-                            username='sca',
+                            username='admin',
                             password='Abcd1234')
     #metadata_db.drop_table('ic_meters')
     metadata_db.create_table('ic_meters', index='boxid', unique=True)
@@ -194,8 +208,8 @@ if __name__ == '__main__':
                        dbport=8086,
                        dbuser='root',
                        dbpassword='root',
-                       dbname='testdb')
-    ts_db.CheckDatabase()
+                       dbname='scadb')
+    ts_db.ensure_db()
 
     icmeter.set_timeseries_db(ts_db)
     icmeter.set_metadata_db(metadata_db)
@@ -211,3 +225,4 @@ if __name__ == '__main__':
 
     # Start the schedule
     sched.start()
+    '''

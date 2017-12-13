@@ -19,7 +19,7 @@ class Netatmo:
 
     def get_start_timestamp(self, ts_name):
         try:
-            start = self.ts_db.GetLastTimeStamp(ts_name).value / 10 ** 9 + 1
+            start = self.ts_db.get_last_timestamp(ts_name).value / 10 ** 9 + 1
         except:
             start = int(time.time() - 3600 * 24 * 100)
         return start
@@ -33,7 +33,7 @@ class Netatmo:
             resp = self.devList.getMeasure(device_id=station_id, module_id=None, scale="max",
                                            mtype=mtype, date_begin=start, date_end=time.time())
             df = self.convert_to_df(resp, station['data_type'])
-            self.ts_db.WriteDB(ts, df)
+            self.ts_db.write_ts(ts, df)
 
             for module in station['modules']:
                 module_name = module['module_name'].replace(' ', '_')
@@ -44,7 +44,7 @@ class Netatmo:
                                                mtype=mtype, date_begin=start, date_end=time.time())
                 df = self.convert_to_df(resp, module['data_type'])
                 if not df.empty:
-                    self.ts_db.WriteDB(ts, df)
+                    self.ts_db.write_ts(ts, df)
 
     def convert_to_df(self, json, cols):
         numberOfRows = len(json['body'])
@@ -82,7 +82,7 @@ if __name__ == '__main__':
                          dbuser='root',
                          dbpassword='root',
                          dbname='testdb')
-    ts_db.CheckDatabase()
+    ts_db.ensure_db()
     netatmo.set_timeseries_db(ts_db)
 
     sched = BlockingScheduler()
