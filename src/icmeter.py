@@ -57,10 +57,13 @@ class IcMeter:
         url = "https://app.ic-meter.com/icm/api/boxlocations?access_token=%s&_=%s" % (
             self.access_token, int(round(time.time() * 1000)))
         r = requests.get(url, allow_redirects=False, timeout=self.timeout)
-        # save boxes metadata into MongoDB
-        boxes = json.loads(r.text)
-        self.save_boxes(boxes)
-        return boxes
+        if r.status_code == 200:
+            # save boxes metadata into MongoDB
+            boxes = json.loads(r.text)
+            #self.save_boxes(boxes)
+            return boxes
+        else:
+            raise Exception(r.text)
 
     def save_boxes(self, boxes):
         for box in boxes:
@@ -77,11 +80,13 @@ class IcMeter:
 
             start = self.get_start_timestamp(self.ts_name.format(box_id))
             if start == None:
-                start = box['fromdate'] / 1000
+                start = int(box['fromdate'] / 1000)
+            else:
+                start = int(start)
 
             stop = int(time.time())
             if 'lastMeasurementDate' in box:
-                stop = box['lastMeasurementDate'] / 1000
+                stop = int(box['lastMeasurementDate'] / 1000)
 
             self.import_all_points(box_id, start, stop, 60 * 60 * 24 * 7)
 
@@ -142,7 +147,7 @@ class IcMeter:
         if r.status_code != 200:
             r = requests.get(data_url, timeout=self.timeout)
         if r.status_code != 200:
-            print("Request failed!")
+            print('Failed to get data for boxid={}'.format(box_id))
 
         json = r.json()
         return self.convert_to_df(json)
@@ -178,51 +183,19 @@ class IcMeter:
 
 
 if __name__ == '__main__':
-    '''
-    icmeter = IcMeter(user='dummy',
-                      password='dummy',
+    icmeter = IcMeter(user='*****',
+                      password='*****',
                       verbose=True)
-    
-    icmeter = IcMeter(user='hagel@byg.dtu.dk',
-                      password='DTUbyg402',
-                      verbose=True)
-    '''
-
-    icmeter = IcMeter(user='scaicmeter@compute.dtu.dk',
-                      password='savetheclimate!now',
-                      verbose=True)
-    icmeter.get_access_token()
-    icmeter.get_boxes()
-
-    '''
-    metadata_db = MongoConnection(host="localhost",
-                            port=27017,
-                            db_name='scadb',
-                            username='admin',
-                            password='Abcd1234')
-    #metadata_db.drop_table('ic_meters')
-    metadata_db.create_table('ic_meters', index='boxid', unique=True)
-
 
     ts_db = InfluxTSDB(dbhost='localhost',
                        dbport=8086,
-                       dbuser='root',
-                       dbpassword='root',
-                       dbname='scadb')
-    ts_db.ensure_db()
+                       dbuser='**',
+                       dbpassword='****',
+                       dbname='***')
 
     icmeter.set_timeseries_db(ts_db)
-    icmeter.set_metadata_db(metadata_db)
-
-    sched = BlockingScheduler()
+    icmeter.import_missing()
 
 
-    @sched.scheduled_job('interval', seconds=60)
-    def poll_data():
-        log.info('polling ic-meter time=%s' % datetime.now())
-        icmeter.import_missing()
 
 
-    # Start the schedule
-    sched.start()
-    '''
